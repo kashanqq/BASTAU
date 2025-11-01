@@ -1,0 +1,10 @@
+1	aaa	a	64	900000	900	123	3	aaaaaaaaaa	ssadsad
+2 	bbb	b	23	888888	800	54	5	bbbbbbbbbb	sads
+3	ccc	c	53	777777	700	32	6	fssadsdsad	dsfdfds
+4	ddd	d	12	666666	321	65	4	sadsadsad	edfewf
+5	eee	e	3	55555	123	78	4	dasdasdsad	dffsdf
+6	fff	f	53	44333	342	56	2	dsadsadsads	dsfdsfds
+7	ggg	g	61	3334	534	34	3	sadsadsad	dsfdsf
+8	hhh	h	11	22222	565	32	8	sadasdasdsa	dsfdsf
+9	iii	i	12	43333	765	43	6	dsadsadsads	dsfdfdsf
+10	jjj	j	6	1111	432	12	8	dsadsadsada	sdsadas
