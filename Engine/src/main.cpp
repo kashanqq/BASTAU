@@ -1720,7 +1720,7 @@ int main()
 			diffX = (float)((cursorPosition.X - (s32)ImGui::GetMousePos().x));
 			diffY = (float)((cursorPosition.Y - (s32)ImGui::GetMousePos().y));
 
-			///Right click camera rotation (Unreal Engine style)
+			///Right click camera rotation
 			if (ImGui::IsMouseDown(1) && IsMouseMoved)
 			{
 				// Вращение камеры вокруг своей оси
