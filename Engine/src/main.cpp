@@ -1,10 +1,11 @@
-///Standard Libraty Includes
+﻿///Standard Libraty Includes
 #include <string>
 #include <thread>
 #include <iostream>
 #include <math.h>
 #include <ctime>
 #include <regex>
+#include <chrono>
 
 ///Dependencies Library Includes
 #include <IrrIMGUI/IncludeIrrlicht.h>
@@ -25,14 +26,14 @@
 #include "FileParser.h"
 #include "jagpdf\api.h"
 
-///NameSpaces
+///NameSpacesx	
 
 using namespace irr;
 using namespace core;
 using namespace scene;
 using namespace video;
 using namespace io;
-using namespace gui;
+using namespace gui;	
 using namespace IrrIMGUI;
 using namespace CONSTANTS;
 using namespace jag;
@@ -62,6 +63,10 @@ float pointX = 0.f;
 float diffX = 0.f, diffY = 0.f;
 float rotation = 0.0f;
 int Y = 830;
+float cameraYaw = -90.0f;    // Угол поворота по горизонтали
+float cameraPitch = 0.0f;     // Угол наклона по вертикали
+core::vector3df cameraFront = core::vector3df(0, 0, 1);  // Направление взгляда
+core::vector3df cameraUp = core::vector3df(0, 1, 0);
 ///Functions
 void toolSelectEditor(ToolEditor tool);
 void toolSelectSpectator(ToolsSpectator tool);
@@ -245,7 +250,15 @@ using namespace std::chrono_literals;
 ///Main Function
 int main()
 {
-	FreeConsole();
+	AllocConsole();
+	FILE* fDummy;
+	freopen_s(&fDummy, "CONOUT$", "w", stdout);
+	freopen_s(&fDummy, "CONOUT$", "w", stderr);
+	freopen_s(&fDummy, "CONIN$", "r", stdin);
+
+	std::cout << "Debug console started" << std::endl;
+
+	/*FreeConsole();*/
 	std::vector<std::string> searchBuff;
 	ISceneNode* lastHovered = 0;
 	ISceneNode* lastSelected = 0;
@@ -286,7 +299,50 @@ int main()
 	TOOLS_E[ToolEditor::TE_SELECTOR] = true;
 	CAMERAMODES[CameraMode::CAMERA_ORBIT] = true;
 
-	CIMGUIEventReceiver EventReceiver;
+	class MyEventReceiver : public IrrIMGUI::CIMGUIEventReceiver
+	{
+	public:
+		bool mKeyW = false;
+		bool mKeyA = false;
+		bool mKeyS = false;
+		bool mKeyD = false;
+		bool mKeyQ = false;
+		bool mKeyE = false;
+		bool mRMB = false;
+
+		virtual bool OnEvent(const irr::SEvent& event)
+		{
+			IrrIMGUI::CIMGUIEventReceiver::OnEvent(event);
+
+			if (event.EventType == irr::EET_KEY_INPUT_EVENT)
+			{
+				if (event.KeyInput.Key == irr::KEY_KEY_W)
+					mKeyW = event.KeyInput.PressedDown;
+				else if (event.KeyInput.Key == irr::KEY_KEY_A)
+					mKeyA = event.KeyInput.PressedDown;
+				else if (event.KeyInput.Key == irr::KEY_KEY_S)
+					mKeyS = event.KeyInput.PressedDown;
+				else if (event.KeyInput.Key == irr::KEY_KEY_D)
+					mKeyD = event.KeyInput.PressedDown;
+				else if (event.KeyInput.Key == irr::KEY_KEY_Q)
+					mKeyQ = event.KeyInput.PressedDown;
+				else if (event.KeyInput.Key == irr::KEY_KEY_E)
+					mKeyE = event.KeyInput.PressedDown;
+			}
+			else if (event.EventType == irr::EET_MOUSE_INPUT_EVENT)
+			{
+				if (event.MouseInput.Event == irr::EMIE_RMOUSE_PRESSED_DOWN)
+					mRMB = true;
+				else if (event.MouseInput.Event == irr::EMIE_RMOUSE_LEFT_UP)
+					mRMB = false;
+			}
+
+			return false;
+		}
+	};
+
+	MyEventReceiver EventReceiver;
+
 	device = createDeviceEx(Initializer::irrlichtDriverParams(EventReceiver));
 	if (!device)
 	{
@@ -355,6 +411,8 @@ int main()
 	camera = smgr->addCameraSceneNode();
 	camera->setIsDebugObject(true);
 	scene::ISceneNode* cameraTarget;
+
+
 
 	if (camera)
 	{
@@ -451,10 +509,6 @@ int main()
 		if (ImGui::IsKeyDown(40)) {
 			theta -= 0.1f * frameDeltaTime;
 		}
-		if (ImGui::IsKeyDown(65)) {
-			std::cout << r << std::endl;
-			r += 500.f * frameDeltaTime;
-		}
 		if (EventReceiver.mKeyZPressed) {
 			std::cout << r << std::endl;
 			r -= 500.f * frameDeltaTime;
@@ -474,7 +528,7 @@ int main()
 		}
 		
 
-		/*
+		
 		///Top MainMenuBar
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.f, 5.f));
 		if (ImGui::BeginMainMenuBar())
@@ -551,7 +605,6 @@ int main()
 		ImGui::PopStyleVar();
 		}
 		///Top MainMenuBar end
-		*/
 
 		///Single unit data window
 		if (WINDOWS[Window::WINDOW_UNIT_DATA])
@@ -1439,9 +1492,15 @@ int main()
 					theta = 1.8f;
 					phi = -1.15f;
 					selected = tree.getRoot()->getISceneNode();
-					cameraTargetPosition = vector3df(selected->getAbsolutePosition());
-					cameraPosition = vector3df(-900, 100, r);
+					cameraPosition = core::vector3df(0, 0, -500);
+					cameraTargetPosition = core::vector3df(0, 0, 0);
 					camera->setPosition(cameraPosition);
+					camera->setTarget(cameraTargetPosition);
+
+					cameraYaw = -90.0f;
+					cameraPitch = 0.0f;
+					cameraFront = core::vector3df(0, 0, 1);
+					cameraUp = core::vector3df(0, 1, 0);
 				}
 				ImGui::End();
 
@@ -1573,7 +1632,6 @@ int main()
 		/////////////////////////////////////////////////////////////////////////
 		///ImGui::ShowTestWindow();
 		///Interface end
-
 		///Functionality 
 		if (!ImGui::GetIO().WantCaptureMouse)
 		{
@@ -1622,7 +1680,11 @@ int main()
 			}
 			///Select box end
 
+
+
 			Functionality::highlightHoveredNode(selectedNodes, hovered, lastHovered, selectedNodeTexture, defaultNodeTexture, highlightSelectedNodeTexture, highlightDefaultNodeTexture, isNodeHovered, device, CollMan);
+
+
 
 			///Zoom control
 			if (distance < 14000)
@@ -1658,33 +1720,72 @@ int main()
 			diffX = (float)((cursorPosition.X - (s32)ImGui::GetMousePos().x));
 			diffY = (float)((cursorPosition.Y - (s32)ImGui::GetMousePos().y));
 
-			///CTRL+Right click rotation
-			if (ImGui::IsMouseDown(1) && IsMouseMoved && EventReceiver.mCtrlPressed)
+			///Right click camera rotation (FPS style)
+			if (ImGui::IsMouseDown(1) && IsMouseMoved)
 			{
-				if (CAMERAMODES[CameraMode::CAMERA_ORBIT])
-				{
-					phi += diffX / 200;
+				float sensitivity = 0.1f;
+
+				// Обновляем углы на основе движения мыши
+				cameraYaw += diffX * sensitivity;
+				cameraPitch -= diffY * sensitivity;
+
+				// Ограничиваем угол обзора по вертикали
+				if (cameraPitch > 89.0f) cameraPitch = 89.0f;
+				if (cameraPitch < -89.0f) cameraPitch = -89.0f;
+
+				// Вычисляем новое направление взгляда
+				core::vector3df front;
+				front.X = cos(core::degToRad(cameraYaw)) * cos(core::degToRad(cameraPitch));
+				front.Y = sin(core::degToRad(cameraPitch));
+				front.Z = sin(core::degToRad(cameraYaw)) * cos(core::degToRad(cameraPitch));
+				cameraFront = front.normalize();
+
+				// Обновляем целевую позицию камеры
+				cameraTargetPosition = cameraPosition + cameraFront;
+			}
+			///Right click rotation end
+
+			///WASD movement with RMB (FPS style)
+			if (ImGui::IsMouseDown(1))
+			{
+				float moveSpeed = 100.0f * frameDeltaTime;
+
+				// Вычисляем векторы направления для движения
+				core::vector3df front = cameraFront;
+				front.Y = 0; // Игнорируем вертикальную составляющую для горизонтального движения
+				front.normalize();
+
+				core::vector3df right = front.crossProduct(core::vector3df(0, 1, 0)).normalize();
+
+				// Движение относительно направления камеры
+				if (EventReceiver.mKeyW) {
+					cameraPosition += front * moveSpeed;
 				}
-				else if (CAMERAMODES[CameraMode::CAMERA_FREE])
-				{
-					phi -= diffX / 200;
+				if (EventReceiver.mKeyS) {
+					cameraPosition -= front * moveSpeed;
+				}
+				if (EventReceiver.mKeyA) {
+					cameraPosition -= right * moveSpeed;
+				}
+				if (EventReceiver.mKeyD) {
+					cameraPosition += right * moveSpeed;
 				}
 
-				if ((theta >= PI / 10 && diffY < 0) || (theta <= (PI / 1.2) && diffY > 0))
-				{
-					if (((theta + (diffY / 200)) >= PI / 10 && diffY < 0) || ((theta + (diffY / 200)) <= (PI / 1.2) && diffY > 0)) {
-						theta += diffY / 200;
-					}
+				// Вертикальное движение
+				if (EventReceiver.mKeyQ) {
+					cameraPosition.Y -= moveSpeed;
 				}
+				if (EventReceiver.mKeyE) {
+					cameraPosition.Y += moveSpeed;
+				}
+
+				// Обновляем целевую позицию после движения
+				cameraTargetPosition = cameraPosition + cameraFront;
 			}
-			else
-			{
-				pointX = (float)cursorPosition.X;
-			}
-			///CTRL+Right click rotation end
+			///WASD movement end
 
 			///CTRL+LEFT click selection
-			if (ImGui::IsMouseClicked(0) && EventReceiver.mCtrlPressed)
+			if (ImGui::IsMouseClicked(0))
 			{
 				ISceneNode *selectedNode = CollMan->getSceneNodeFromScreenCoordinatesBB(device->getCursorControl()->getPosition(), 0, true);
 				irr::core::list<irr::scene::ISceneNode *> children = smgr->getRootSceneNode()->getChildren();
@@ -1950,7 +2051,10 @@ int main()
 		ImGui::PopFont();
 		pGUI->drawAll();
 
+		camera->setPosition(cameraPosition);
+		camera->setTarget(cameraTargetPosition);
 		driver->endScene();
+
 		///Mandatory function executions end
 
 		///FPS COUNTER
@@ -1971,6 +2075,10 @@ int main()
 	pGUI->resetFonts();
 	pGUI->drop();
 	device->drop();
+
+	std::cout << "Press Enter to exit..." << std::endl;
+	std::cin.get();
+
 	return 0;
 }
 
