@@ -76,10 +76,10 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\irrlicht\include;$(SolutionDir)Dependencies\irrimgui\includes;$(SolutionDir)Dependencies\fontawesome\IconFontCppHeaders;$(SolutionDir)Dependencies\jagpdf-1.4.0.win32.x86.c_cpp\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\jagpdf\include\jagpdf\detail;$(SolutionDir)Dependencies\jagpdf\include;$(SolutionDir)Dependencies\irrlicht\include;$(SolutionDir)Dependencies\irrimgui\includes;$(SolutionDir)Dependencies\fontawesome\IconFontCppHeaders;$(SolutionDir)Dependencies\jagpdf-1.4.0.win32.x86.c_cpp\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\jagpdf-1.4.0.win32.x86.c_cpp\lib;$(SolutionDir)Dependencies\irrlicht\lib\Win32-visualstudio;$(SolutionDir)Dependencies\irrimgui\lib\msvc2015-win32\debug-shared</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\jagpdf\lib;$(SolutionDir)Dependencies\irrlicht\lib\Win32-visualstudio;$(SolutionDir)Dependencies\irrimgui\lib\msvc2015-win32\debug-shared</AdditionalLibraryDirectories>
       <AdditionalDependencies>IrrIMGUI.lib;Irrlicht.lib;jagpdf-1.4.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -89,7 +89,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\BASTAU\jagpdf;$(SolutionDir)Dependencies\irrlicht\include;$(SolutionDir)Dependencies\irrimgui\includes;$(SolutionDir)Dependencies\fontawesome\IconFontCppHeaders</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\BASTAU\Dependencies\jagpdf\include;$(SolutionDir)Dependencies\irrlicht\include;$(SolutionDir)Dependencies\irrimgui\includes;$(SolutionDir)Dependencies\fontawesome\IconFontCppHeaders</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\irrlicht\lib\Win32-visualstudio;$(SolutionDir)Dependencies\irrimgui\lib\msvc2015-win32\debug-shared</AdditionalLibraryDirectories>

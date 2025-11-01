@@ -1720,67 +1720,67 @@ int main()
 			diffX = (float)((cursorPosition.X - (s32)ImGui::GetMousePos().x));
 			diffY = (float)((cursorPosition.Y - (s32)ImGui::GetMousePos().y));
 
-			///Right click camera rotation (FPS style)
+			///Right click camera rotation (Unreal Engine style)
 			if (ImGui::IsMouseDown(1) && IsMouseMoved)
 			{
-				float sensitivity = 0.1f;
+				// Вращение камеры вокруг своей оси
+				phi += diffX / 200;
 
-				// Обновляем углы на основе движения мыши
-				cameraYaw += diffX * sensitivity;
-				cameraPitch -= diffY * sensitivity;
-
-				// Ограничиваем угол обзора по вертикали
-				if (cameraPitch > 89.0f) cameraPitch = 89.0f;
-				if (cameraPitch < -89.0f) cameraPitch = -89.0f;
-
-				// Вычисляем новое направление взгляда
-				core::vector3df front;
-				front.X = cos(core::degToRad(cameraYaw)) * cos(core::degToRad(cameraPitch));
-				front.Y = sin(core::degToRad(cameraPitch));
-				front.Z = sin(core::degToRad(cameraYaw)) * cos(core::degToRad(cameraPitch));
-				cameraFront = front.normalize();
-
-				// Обновляем целевую позицию камеры
-				cameraTargetPosition = cameraPosition + cameraFront;
+				// Ограничение вертикального вращения
+				if ((theta >= PI / 10 && diffY < 0) || (theta <= (PI / 1.2) && diffY > 0))
+				{
+					if (((theta + (diffY / 200)) >= PI / 10 && diffY < 0) || ((theta + (diffY / 200)) <= (PI / 1.2) && diffY > 0)) {
+						theta += diffY / 200;
+					}
+				}
+			}
+			else
+			{
+				pointX = (float)cursorPosition.X;
 			}
 			///Right click rotation end
 
-			///WASD movement with RMB (FPS style)
-			if (ImGui::IsMouseDown(1))
+			///WASD movement with RMB (camera-relative movement)
+			if (ImGui::IsMouseDown(1))  // Убрали проверку на Ctrl!
 			{
-				float moveSpeed = 100.0f * frameDeltaTime;
+				float moveSpeed = 500.0f * frameDeltaTime;
 
-				// Вычисляем векторы направления для движения
-				core::vector3df front = cameraFront;
-				front.Y = 0; // Игнорируем вертикальную составляющую для горизонтального движения
-				front.normalize();
+				// Get camera vectors - относительно текущей ориентации камеры
+				core::vector3df forward = (cameraTargetPosition - cameraPosition).normalize();
+				core::vector3df right = forward.crossProduct(core::vector3df(0, 1, 0)).normalize();
+				core::vector3df up = right.crossProduct(forward).normalize();
 
-				core::vector3df right = front.crossProduct(core::vector3df(0, 1, 0)).normalize();
-
-				// Движение относительно направления камеры
+				// Movement in camera-relative directions
 				if (EventReceiver.mKeyW) {
-					cameraPosition += front * moveSpeed;
+					// Движение вперед по направлению взгляда камеры
+					cameraPosition += forward * moveSpeed;
+					cameraTargetPosition += forward * moveSpeed;
 				}
 				if (EventReceiver.mKeyS) {
-					cameraPosition -= front * moveSpeed;
+					// Движение назад
+					cameraPosition -= forward * moveSpeed;
+					cameraTargetPosition -= forward * moveSpeed;
 				}
 				if (EventReceiver.mKeyA) {
+					// Движение влево (перпендикулярно направлению взгляда)
 					cameraPosition -= right * moveSpeed;
+					cameraTargetPosition -= right * moveSpeed;
 				}
 				if (EventReceiver.mKeyD) {
+					// Движение вправо
 					cameraPosition += right * moveSpeed;
+					cameraTargetPosition += right * moveSpeed;
 				}
 
-				// Вертикальное движение
+				// Optional: Q/E for vertical movement
 				if (EventReceiver.mKeyQ) {
-					cameraPosition.Y -= moveSpeed;
+					cameraPosition -= up * moveSpeed;
+					cameraTargetPosition -= up * moveSpeed;
 				}
 				if (EventReceiver.mKeyE) {
-					cameraPosition.Y += moveSpeed;
+					cameraPosition += up * moveSpeed;
+					cameraTargetPosition += up * moveSpeed;
 				}
-
-				// Обновляем целевую позицию после движения
-				cameraTargetPosition = cameraPosition + cameraFront;
 			}
 			///WASD movement end
 
