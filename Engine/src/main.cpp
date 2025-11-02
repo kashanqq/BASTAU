@@ -1767,16 +1767,6 @@ int main()
 			}
 
 			
-			static bool debugShown = false;
-			if (!debugShown && (EventReceiver.mKeyW || EventReceiver.mKeyA || EventReceiver.mKeyS || EventReceiver.mKeyD)) {
-				core::vector3df forward = (cameraTargetPosition - cameraPosition).normalize();
-				core::vector3df right = forward.crossProduct(core::vector3df(0, 1, 0)).normalize();
-
-				std::cout << "Forward: (" << forward.X << ", " << forward.Y << ", " << forward.Z << ")" << std::endl;
-				std::cout << "Right: (" << right.X << ", " << right.Y << ", " << right.Z << ")" << std::endl;
-				std::cout << "Camera Pos: (" << cameraPosition.X << ", " << cameraPosition.Y << ", " << cameraPosition.Z << ")" << std::endl;
-				debugShown = true;
-			}
 
 			///WASD movement with RMB (camera-relative movement)
 			if (ImGui::IsMouseDown(1))
@@ -1801,12 +1791,12 @@ int main()
 					cameraTargetPosition -= forward * moveSpeed;
 				}
 				if (EventReceiver.mKeyA) {
-					cameraPosition -= right * moveSpeed;
-					cameraTargetPosition -= right * moveSpeed;
-				}
-				if (EventReceiver.mKeyD) {
 					cameraPosition += right * moveSpeed;
 					cameraTargetPosition += right * moveSpeed;
+				}
+				if (EventReceiver.mKeyD) {
+					cameraPosition -= right * moveSpeed;
+					cameraTargetPosition -= right * moveSpeed;
 				}
 
 				// Вертикальное движение
