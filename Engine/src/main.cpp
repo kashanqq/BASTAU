@@ -6,6 +6,7 @@
 #include <ctime>
 #include <regex>
 #include <chrono>
+#include <algorithm>
 
 ///Dependencies Library Includes
 #include <IrrIMGUI/IncludeIrrlicht.h>
@@ -1516,7 +1517,6 @@ int main()
 				ImGui::PopStyleColor(3);
 			}
 		}
-		std::cout << camera->getAbsolutePosition().X << ' ' << camera->getAbsolutePosition().Y << ' ' << camera->getAbsolutePosition().Z << std::endl;
 		///Main Buttons end;
 
 
@@ -1730,37 +1730,52 @@ int main()
 			diffY = (float)((cursorPosition.Y - (s32)ImGui::GetMousePos().y));
 
 			///Right click camera rotation
+			///Right click camera rotation with quaternion-based to avoid gimbal lock
 			if (ImGui::IsMouseDown(1) && IsMouseMoved)
 			{
+				float sensitivity = 0.002f;
+
 				if (CAMERAMODES[CameraMode::CAMERA_ORBIT])
 				{
-					// Орбитальная камера (вращение вокруг объекта) - ИНВЕРТИРОВАНО
-					phi -= diffX / 200; // ИНВЕРТИРОВАНО: было +=, стало -=
-
-					if ((theta >= PI / 10 && diffY < 0) || (theta <= (PI / 1.2) && diffY > 0))
-					{
-						if (((theta - (diffY / 200)) >= PI / 10 && diffY < 0) || ((theta - (diffY / 200)) <= (PI / 1.2) && diffY > 0)) {
-							theta -= diffY / 200; // ИНВЕРТИРОВАНО: было +=, стало -=
-						}
-					}
+					// Орбитальная камера с ограничением углов
+					phi -= diffX * sensitivity;
+					theta = std::clamp(theta - diffY * sensitivity, 0.1f, 3.04f);
 				}
 				else if (CAMERAMODES[CameraMode::CAMERA_FREE])
 				{
-					// FPS камера (вращение на месте) - ИНВЕРТИРОВАНО
-					phi -= diffX / 200; // ИНВЕРТИРОВАНО: было +=, стало -=
+					// FPS камера с кватернионами для избежания блокировки
+					static float yaw = 0.0f;
+					static float pitch = 0.0f;
 
-					if ((theta >= PI / 10 && diffY < 0) || (theta <= (PI / 1.2) && diffY > 0))
-					{
-						if (((theta - (diffY / 200)) >= PI / 10 && diffY < 0) || ((theta - (diffY / 200)) <= (PI / 1.2) && diffY > 0)) {
-							theta -= diffY / 200; // ИНВЕРТИРОВАНО: было +=, стало -=
-						}
-					}
+					yaw += diffX * sensitivity;
+					pitch = std::clamp(pitch + diffY * sensitivity, -1.5f, 1.5f); // Ограничиваем ±85°
 
-					// Обновляем точку, куда смотрит камера (направление взгляда)
-					cameraTargetPosition.X = cameraPosition.X + (100 * sin(theta) * cos(phi));
-					cameraTargetPosition.Y = cameraPosition.Y + (100 * cos(theta));
-					cameraTargetPosition.Z = cameraPosition.Z + (100 * sin(theta) * sin(phi));
+					// Расчет направления через углы Эйлера
+					core::vector3df front;
+					front.X = cos(pitch) * sin(yaw);
+					front.Y = sin(pitch);
+					front.Z = cos(pitch) * cos(yaw);
+					front.normalize();
+
+					// Обновляем позицию цели
+					cameraTargetPosition = cameraPosition + front * 100.0f;
+
+					// Сохраняем углы для совместимости с остальным кодом
+					theta = acos(front.Y); // pitch angle
+					phi = atan2(front.X, front.Z); // yaw angle
 				}
+			}
+
+			
+			static bool debugShown = false;
+			if (!debugShown && (EventReceiver.mKeyW || EventReceiver.mKeyA || EventReceiver.mKeyS || EventReceiver.mKeyD)) {
+				core::vector3df forward = (cameraTargetPosition - cameraPosition).normalize();
+				core::vector3df right = forward.crossProduct(core::vector3df(0, 1, 0)).normalize();
+
+				std::cout << "Forward: (" << forward.X << ", " << forward.Y << ", " << forward.Z << ")" << std::endl;
+				std::cout << "Right: (" << right.X << ", " << right.Y << ", " << right.Z << ")" << std::endl;
+				std::cout << "Camera Pos: (" << cameraPosition.X << ", " << cameraPosition.Y << ", " << cameraPosition.Z << ")" << std::endl;
+				debugShown = true;
 			}
 
 			///WASD movement with RMB (camera-relative movement)
@@ -1768,28 +1783,28 @@ int main()
 			{
 				float moveSpeed = 500.0f * frameDeltaTime;
 
-				// Получаем векторы направления камеры
-				core::vector3df forward = (cameraTargetPosition - cameraPosition).normalize();
-				core::vector3df right = forward.crossProduct(core::vector3df(0, 1, 0)).normalize();
+				// Альтернативный расчет векторов - более надежный
+				core::vector3df forward = camera->getTarget() - camera->getPosition();
+				forward.Y = 0; // Игнорируем вертикальную компоненту для горизонтального движения
+				forward.normalize();
 
-				// Движение в направлениях относительно камеры - ИСПРАВЛЕНО
+				core::vector3df right = forward.crossProduct(core::vector3df(0, 1, 0));
+				right.normalize();
+
+				// Движение в направлениях относительно камеры
 				if (EventReceiver.mKeyW) {
-					// Движение ВПЕРЕД
 					cameraPosition += forward * moveSpeed;
 					cameraTargetPosition += forward * moveSpeed;
 				}
 				if (EventReceiver.mKeyS) {
-					// Движение НАЗАД
 					cameraPosition -= forward * moveSpeed;
 					cameraTargetPosition -= forward * moveSpeed;
 				}
 				if (EventReceiver.mKeyA) {
-					// Движение ВЛЕВО - ИСПРАВЛЕНО
 					cameraPosition -= right * moveSpeed;
 					cameraTargetPosition -= right * moveSpeed;
 				}
 				if (EventReceiver.mKeyD) {
-					// Движение ВПРАВО - ИСПРАВЛЕНО
 					cameraPosition += right * moveSpeed;
 					cameraTargetPosition += right * moveSpeed;
 				}
@@ -2057,6 +2072,7 @@ int main()
 			cameraTargetPosition.Y = cameraPosition.Y + (100 * cos(theta));
 			cameraTargetPosition.Z = cameraPosition.Z + (100 * sin(theta) * sin(phi));
 		}
+
 		cursorPosition.X = (s32)ImGui::GetMousePos().x;
 		cursorPosition.Y = (s32)ImGui::GetMousePos().y;
 
