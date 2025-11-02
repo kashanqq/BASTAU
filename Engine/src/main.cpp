@@ -59,6 +59,9 @@ bool IsMouseMoved = false;
 bool isNodeHovered = false;
 bool logWindowCollapsed = false;
 bool update = false;
+float cameraBaseSpeed = 500.0f;
+float cameraSpeedMultiplier = 1.0f;
+bool showSpeedSettings = false;
 float r = 2000.f, theta = 1.8f, phi = -1.15f;
 float pointX = 0.f;
 float diffX = 0.f, diffY = 0.f;
@@ -277,7 +280,7 @@ int main()
 
 	vector2di firstCorner, secondCorner;
 	bool firstCornerSet = false;
-
+	
 	std::vector<std::vector<std::string>> valueMatrix;
 	std::vector<std::vector<std::string>> summaryData;
 	summaryData.resize(6);
@@ -409,7 +412,9 @@ int main()
 	camera->setIsDebugObject(true);
 	scene::ISceneNode* cameraTarget;
 
-
+	cameraBaseSpeed = 500.0f;
+	cameraSpeedMultiplier = 1.0f;
+	showSpeedSettings = false;
 
 	if (camera)
 	{
@@ -1398,12 +1403,56 @@ int main()
 
 				}
 			}
-
-
-
 			ImGui::End();
 		}
 		///Filter window end
+
+		//Show camera speed window
+		if (showSpeedSettings)
+		{
+			ImGui::SetNextWindowSize(ImVec2(300.f, 150.f));
+			ImGui::SetNextWindowPos(ImVec2(
+				screenSize.Width - interfaceButton.Width - spacing - 300.f,
+				screenSize.Height - interfaceButton.Height * 5 - 20 - 150.f
+			));
+			ImGui::Begin("Camera Speed Settings", &showSpeedSettings,
+				ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_ShowBorders);
+
+			// Текущая скорость
+			float currentSpeed = cameraBaseSpeed * cameraSpeedMultiplier;
+			ImGui::Text("Current Speed: %.0f units/sec", currentSpeed);
+
+			// Ползунок для множителя скорости
+			ImGui::Text("Speed Multiplier:");
+			ImGui::SliderFloat("##SpeedMultiplier", &cameraSpeedMultiplier, 0.1f, 5.0f, "%.1fx");
+
+			// Быстрые пресеты
+			ImGui::Text("Presets:");
+			if (ImGui::Button("Slow", ImVec2(60, 25))) {
+				cameraSpeedMultiplier = 0.3f;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Normal", ImVec2(60, 25))) {
+				cameraSpeedMultiplier = 1.0f;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Fast", ImVec2(60, 25))) {
+				cameraSpeedMultiplier = 2.0f;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Very Fast", ImVec2(80, 25))) {
+				cameraSpeedMultiplier = 4.0f;
+			}
+
+			// Сброс к стандартным настройкам
+			if (ImGui::Button("Reset to Default", ImVec2(120, 25))) {
+				cameraBaseSpeed = 500.0f;
+				cameraSpeedMultiplier = 1.0f;
+			}
+			ImGui::End();
+		}
+		//Show camera speed window end
+
 		///Main Buttons;
 		{
 			{
@@ -1513,6 +1562,16 @@ int main()
 					camera->setTarget(cameraTargetPosition);
 				}
 				ImGui::End();
+
+				ImGui::SetNextWindowPos(ImVec2(screenSize.Width - interfaceButton.Width - spacing, (screenSize.Height - interfaceButton.Height * 5) - 20));
+				ImGui::SetNextWindowSize(ImVec2((float)screenSize.Width / 7.2f, (float)screenSize.Height / 12.6f));
+				ImGui::Begin("WINDOWB5", 0, ImVec2(interfaceButton.Width, interfaceButton.Height), 0.f, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+				if (ImGui::Button("Camera Speed", ImVec2(ImGui::GetWindowWidth() - 10, ImGui::GetWindowHeight() - 10)))
+				{
+					showSpeedSettings = !showSpeedSettings;
+				}
+				ImGui::End();
+
 
 				ImGui::PopStyleColor(3);
 			}
@@ -1636,8 +1695,14 @@ int main()
 					}
 				}
 			}
+
+
+
 			ImGui::End();
 		}
+
+
+
 		/////////////////////////////////////////////////////////////////////////
 		///ImGui::ShowTestWindow();
 		///Interface end
@@ -1730,7 +1795,6 @@ int main()
 			diffY = (float)((cursorPosition.Y - (s32)ImGui::GetMousePos().y));
 
 			///Right click camera rotation
-			///Right click camera rotation with quaternion-based to avoid gimbal lock
 			if (ImGui::IsMouseDown(1) && IsMouseMoved)
 			{
 				float sensitivity = 0.002f;
@@ -1771,7 +1835,7 @@ int main()
 			///WASD movement with RMB (camera-relative movement)
 			if (ImGui::IsMouseDown(1))
 			{
-				float moveSpeed = 500.0f * frameDeltaTime;
+				float moveSpeed = cameraBaseSpeed * cameraSpeedMultiplier * frameDeltaTime;
 
 				// Альтернативный расчет векторов - более надежный
 				core::vector3df forward = camera->getTarget() - camera->getPosition();
