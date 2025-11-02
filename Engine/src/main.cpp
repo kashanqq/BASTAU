@@ -946,7 +946,6 @@ int main()
 				break;
 			}
 
-
 			ImGui::End();
 		}
 		///Search window end
