@@ -63,10 +63,6 @@ float pointX = 0.f;
 float diffX = 0.f, diffY = 0.f;
 float rotation = 0.0f;
 int Y = 830;
-float cameraYaw = -90.0f;    // Угол поворота по горизонтали
-float cameraPitch = 0.0f;     // Угол наклона по вертикали
-core::vector3df cameraFront = core::vector3df(0, 0, 1);  // Направление взгляда
-core::vector3df cameraUp = core::vector3df(0, 1, 0);
 ///Functions
 void toolSelectEditor(ToolEditor tool);
 void toolSelectSpectator(ToolsSpectator tool);
@@ -297,7 +293,7 @@ int main()
 	VIEWMODES[UserMode::USERMODE_EDITOR] = true;
 	TOOLS_S[ToolsSpectator::TS_SELECTOR] = true;
 	TOOLS_E[ToolEditor::TE_SELECTOR] = true;
-	CAMERAMODES[CameraMode::CAMERA_ORBIT] = true;
+	CAMERAMODES[CameraMode::CAMERA_FREE] = true;
 
 	class MyEventReceiver : public IrrIMGUI::CIMGUIEventReceiver
 	{
@@ -533,76 +529,95 @@ int main()
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.f, 5.f));
 		if (ImGui::BeginMainMenuBar())
 		{
-		if (ImGui::BeginMenu("File"))
-		{
-		if (ImGui::BeginMenu("Mode"))
-		{
-		if (ImGui::MenuItem(ICON_FA_BINOCULARS" Spectator", NULL, VIEWMODES[UserMode::USERMODE_SPECTATOR]))
-		{
-		if (VIEWMODES[UserMode::USERMODE_SPECTATOR] == 0)
-		{
-		switchViewMode(UserMode::USERMODE_SPECTATOR);
-		}
-		}
-		if (ImGui::MenuItem(ICON_FA_EDIT" Editor", NULL, VIEWMODES[UserMode::USERMODE_EDITOR]))
-		{
-		if (VIEWMODES[UserMode::USERMODE_EDITOR] == 0)
-		{
-		switchViewMode(UserMode::USERMODE_EDITOR);
-		}
-		}
-		ImGui::EndMenu();
-		}
-		ImGui::EndMenu();
-		}
-		if (ImGui::BeginMenu("Edit"))
-		{
-		ImGui::EndMenu();
-		}
-		if (ImGui::BeginMenu("View"))
-		{
-		if (ImGui::MenuItem("ToolBox", NULL, WINDOWS[Window::WINDOW_TOOLS]))
-		{
-		if (WINDOWS[Window::WINDOW_TOOLS] == 0) WINDOWS[Window::WINDOW_TOOLS] = 1;
-		else WINDOWS[Window::WINDOW_TOOLS] = 0;
-		}
-		ImGui::EndMenu();
-		}
-		if (ImGui::BeginMenu("Data"))
-		{
-		if (ImGui::BeginMenu("Windows"))
-		{
-		if (ImGui::MenuItem("Single Unit", NULL, WINDOWS[Window::WINDOW_UNIT_DATA]))
-		{
-		if (WINDOWS[Window::WINDOW_UNIT_DATA] == 0) WINDOWS[Window::WINDOW_UNIT_DATA] = 1;
-		else WINDOWS[Window::WINDOW_UNIT_DATA] = 0;
-		}
-		if (ImGui::MenuItem("Multi Unit", NULL, WINDOWS[Window::WINDOW_MULTI_UNIT_DATA]))
-		{
-		if (WINDOWS[Window::WINDOW_MULTI_UNIT_DATA] == 0) WINDOWS[Window::WINDOW_MULTI_UNIT_DATA] = 1;
-		else WINDOWS[Window::WINDOW_MULTI_UNIT_DATA] = 0;
-		}
-		ImGui::EndMenu();
-		}
-		ImGui::EndMenu();
-		}
-		if (ImGui::BeginMenu("Debug"))
-		{
-		if (ImGui::MenuItem("Log", NULL, WINDOWS[Window::WINDOW_LOG]))
-		{
-		if (WINDOWS[Window::WINDOW_LOG] == 0) WINDOWS[Window::WINDOW_LOG] = 1;
-		else WINDOWS[Window::WINDOW_LOG] = 0;
-		}
-		ImGui::EndMenu();
-		}
-		if (ImGui::BeginMenu("Tools"))
-		{
-
-		ImGui::EndMenu();
-		}
-
-		ImGui::EndMainMenuBar();
-		ImGui::PopStyleVar();
+			if (ImGui::BeginMenu("File"))
+			{
+				if (ImGui::BeginMenu("Mode"))
+				{
+					if (ImGui::MenuItem(ICON_FA_BINOCULARS" Spectator", NULL, VIEWMODES[UserMode::USERMODE_SPECTATOR]))
+					{
+						if (VIEWMODES[UserMode::USERMODE_SPECTATOR] == 0)
+						{
+							switchViewMode(UserMode::USERMODE_SPECTATOR);
+						}
+					}
+					if (ImGui::MenuItem(ICON_FA_EDIT" Editor", NULL, VIEWMODES[UserMode::USERMODE_EDITOR]))
+					{
+						if (VIEWMODES[UserMode::USERMODE_EDITOR] == 0)
+						{
+							switchViewMode(UserMode::USERMODE_EDITOR);
+						}
+					}
+					ImGui::EndMenu();
+				}
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("Edit"))
+			{
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("View"))
+			{
+				if (ImGui::MenuItem("ToolBox", NULL, WINDOWS[Window::WINDOW_TOOLS]))
+				{
+					if (WINDOWS[Window::WINDOW_TOOLS] == 0) WINDOWS[Window::WINDOW_TOOLS] = 1;
+					else WINDOWS[Window::WINDOW_TOOLS] = 0;
+				}
+				ImGui::Separator();
+				if (ImGui::BeginMenu("Camera Mode"))
+				{
+					if (ImGui::MenuItem(ICON_FA_SYNC_ALT" Orbit Camera", NULL, CAMERAMODES[CameraMode::CAMERA_ORBIT]))
+					{
+						if (CAMERAMODES[CameraMode::CAMERA_ORBIT] == 0)
+						{
+							CAMERAMODES[CameraMode::CAMERA_ORBIT] = 1;
+							CAMERAMODES[CameraMode::CAMERA_FREE] = 0;
+						}
+					}
+					if (ImGui::MenuItem(ICON_FA_ARROWS_ALT" Free Camera (FPS)", NULL, CAMERAMODES[CameraMode::CAMERA_FREE]))
+					{
+						if (CAMERAMODES[CameraMode::CAMERA_FREE] == 0)
+						{
+							CAMERAMODES[CameraMode::CAMERA_FREE] = 1;
+							CAMERAMODES[CameraMode::CAMERA_ORBIT] = 0;
+						}
+					}
+					ImGui::EndMenu();
+				}
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("Data"))
+			{
+				if (ImGui::BeginMenu("Windows"))
+				{
+					if (ImGui::MenuItem("Single Unit", NULL, WINDOWS[Window::WINDOW_UNIT_DATA]))
+					{
+						if (WINDOWS[Window::WINDOW_UNIT_DATA] == 0) WINDOWS[Window::WINDOW_UNIT_DATA] = 1;
+						else WINDOWS[Window::WINDOW_UNIT_DATA] = 0;
+					}
+					if (ImGui::MenuItem("Multi Unit", NULL, WINDOWS[Window::WINDOW_MULTI_UNIT_DATA]))
+					{
+						if (WINDOWS[Window::WINDOW_MULTI_UNIT_DATA] == 0) WINDOWS[Window::WINDOW_MULTI_UNIT_DATA] = 1;
+						else WINDOWS[Window::WINDOW_MULTI_UNIT_DATA] = 0;
+					}
+					ImGui::EndMenu();
+				}
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("Debug"))
+			{
+				if (ImGui::MenuItem("Log", NULL, WINDOWS[Window::WINDOW_LOG]))
+				{
+					if (WINDOWS[Window::WINDOW_LOG] == 0) WINDOWS[Window::WINDOW_LOG] = 1;
+					else WINDOWS[Window::WINDOW_LOG] = 0;
+				}
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("Tools"))
+			{
+				ImGui::EndMenu();
+			}
+			ImGui::EndMainMenuBar();
+			ImGui::PopStyleVar();
 		}
 		///Top MainMenuBar end
 
@@ -1496,11 +1511,6 @@ int main()
 					cameraTargetPosition = core::vector3df(0, 0, 0);
 					camera->setPosition(cameraPosition);
 					camera->setTarget(cameraTargetPosition);
-
-					cameraYaw = -90.0f;
-					cameraPitch = 0.0f;
-					cameraFront = core::vector3df(0, 0, 1);
-					cameraUp = core::vector3df(0, 1, 0);
 				}
 				ImGui::End();
 
@@ -1723,66 +1733,78 @@ int main()
 			///Right click camera rotation
 			if (ImGui::IsMouseDown(1) && IsMouseMoved)
 			{
-				// Вращение камеры вокруг своей оси
-				phi += diffX / 200;
-
-				// Ограничение вертикального вращения
-				if ((theta >= PI / 10 && diffY < 0) || (theta <= (PI / 1.2) && diffY > 0))
+				if (CAMERAMODES[CameraMode::CAMERA_ORBIT])
 				{
-					if (((theta + (diffY / 200)) >= PI / 10 && diffY < 0) || ((theta + (diffY / 200)) <= (PI / 1.2) && diffY > 0)) {
-						theta += diffY / 200;
+					// Орбитальная камера (вращение вокруг объекта) - ИНВЕРТИРОВАНО
+					phi -= diffX / 200; // ИНВЕРТИРОВАНО: было +=, стало -=
+
+					if ((theta >= PI / 10 && diffY < 0) || (theta <= (PI / 1.2) && diffY > 0))
+					{
+						if (((theta - (diffY / 200)) >= PI / 10 && diffY < 0) || ((theta - (diffY / 200)) <= (PI / 1.2) && diffY > 0)) {
+							theta -= diffY / 200; // ИНВЕРТИРОВАНО: было +=, стало -=
+						}
 					}
 				}
+				else if (CAMERAMODES[CameraMode::CAMERA_FREE])
+				{
+					// FPS камера (вращение на месте) - ИНВЕРТИРОВАНО
+					phi -= diffX / 200; // ИНВЕРТИРОВАНО: было +=, стало -=
+
+					if ((theta >= PI / 10 && diffY < 0) || (theta <= (PI / 1.2) && diffY > 0))
+					{
+						if (((theta - (diffY / 200)) >= PI / 10 && diffY < 0) || ((theta - (diffY / 200)) <= (PI / 1.2) && diffY > 0)) {
+							theta -= diffY / 200; // ИНВЕРТИРОВАНО: было +=, стало -=
+						}
+					}
+
+					// Обновляем точку, куда смотрит камера (направление взгляда)
+					cameraTargetPosition.X = cameraPosition.X + (100 * sin(theta) * cos(phi));
+					cameraTargetPosition.Y = cameraPosition.Y + (100 * cos(theta));
+					cameraTargetPosition.Z = cameraPosition.Z + (100 * sin(theta) * sin(phi));
+				}
 			}
-			else
-			{
-				pointX = (float)cursorPosition.X;
-			}
-			///Right click rotation end
 
 			///WASD movement with RMB (camera-relative movement)
-			if (ImGui::IsMouseDown(1))  // Убрали проверку на Ctrl!
+			if (ImGui::IsMouseDown(1))
 			{
 				float moveSpeed = 500.0f * frameDeltaTime;
 
-				// Get camera vectors - относительно текущей ориентации камеры
+				// Получаем векторы направления камеры
 				core::vector3df forward = (cameraTargetPosition - cameraPosition).normalize();
 				core::vector3df right = forward.crossProduct(core::vector3df(0, 1, 0)).normalize();
-				core::vector3df up = right.crossProduct(forward).normalize();
 
-				// Movement in camera-relative directions
+				// Движение в направлениях относительно камеры - ИСПРАВЛЕНО
 				if (EventReceiver.mKeyW) {
-					// Движение вперед по направлению взгляда камеры
+					// Движение ВПЕРЕД
 					cameraPosition += forward * moveSpeed;
 					cameraTargetPosition += forward * moveSpeed;
 				}
 				if (EventReceiver.mKeyS) {
-					// Движение назад
+					// Движение НАЗАД
 					cameraPosition -= forward * moveSpeed;
 					cameraTargetPosition -= forward * moveSpeed;
 				}
 				if (EventReceiver.mKeyA) {
-					// Движение влево (перпендикулярно направлению взгляда)
+					// Движение ВЛЕВО - ИСПРАВЛЕНО
 					cameraPosition -= right * moveSpeed;
 					cameraTargetPosition -= right * moveSpeed;
 				}
 				if (EventReceiver.mKeyD) {
-					// Движение вправо
+					// Движение ВПРАВО - ИСПРАВЛЕНО
 					cameraPosition += right * moveSpeed;
 					cameraTargetPosition += right * moveSpeed;
 				}
 
-				// Optional: Q/E for vertical movement
+				// Вертикальное движение
 				if (EventReceiver.mKeyQ) {
-					cameraPosition -= up * moveSpeed;
-					cameraTargetPosition -= up * moveSpeed;
+					cameraPosition.Y -= moveSpeed;
+					cameraTargetPosition.Y -= moveSpeed;
 				}
 				if (EventReceiver.mKeyE) {
-					cameraPosition += up * moveSpeed;
-					cameraTargetPosition += up * moveSpeed;
+					cameraPosition.Y += moveSpeed;
+					cameraTargetPosition.Y += moveSpeed;
 				}
 			}
-			///WASD movement end
 
 			///CTRL+LEFT click selection
 			if (ImGui::IsMouseClicked(0))
@@ -1948,11 +1970,10 @@ int main()
 
 		}
 		///Movement animation
-		if (selected && anim) {
+		if (selected && anim && CAMERAMODES[CameraMode::CAMERA_ORBIT]) {
 			if (cameraTargetPosition.getDistanceFrom(selected->getPosition()) < 4)
 			{
 				anim = 0;
-
 			}
 			if (anim == 1)
 			{
@@ -2033,9 +2054,9 @@ int main()
 		}
 		else if (CAMERAMODES[CameraMode::CAMERA_FREE])
 		{
-			cameraTargetPosition.X = (r * sin(theta) * cos(phi)) + cameraPosition.X;
-			cameraTargetPosition.Y = (r * cos(theta)) + cameraPosition.Y;
-			cameraTargetPosition.Z = (r * sin(theta) * sin(phi)) + cameraPosition.Z;
+			cameraTargetPosition.X = cameraPosition.X + (100 * sin(theta) * cos(phi));
+			cameraTargetPosition.Y = cameraPosition.Y + (100 * cos(theta));
+			cameraTargetPosition.Z = cameraPosition.Z + (100 * sin(theta) * sin(phi));
 		}
 		cursorPosition.X = (s32)ImGui::GetMousePos().x;
 		cursorPosition.Y = (s32)ImGui::GetMousePos().y;
